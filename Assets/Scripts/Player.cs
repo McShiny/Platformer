@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,6 +9,7 @@ public class Player : MonoBehaviour
     public static Player Instance { get; private set; }
 
     public event EventHandler OnCoinCollected;
+    public event EventHandler OnGameFinished;
     public event EventHandler<OnPlayerDashedEventArgs> OnPlayerDashed;
     public class OnPlayerDashedEventArgs : EventArgs {
         public float progressNormalized;
@@ -17,6 +19,8 @@ public class Player : MonoBehaviour
     [SerializeField] private CapsuleCollider2D playerCapsuleCollider;
     [SerializeField] private LayerMask enviromentLayerMask;
     [SerializeField] private LayerMask coinLayerMask;
+    [SerializeField] private LayerMask borderLayerMask;
+    [SerializeField] private LayerMask finishLayerMask;
 
     // Movement Variables
     private float moveSpeed = 7f;
@@ -65,6 +69,15 @@ public class Player : MonoBehaviour
     private void Update() {
         PlayerMove();
         CoinCollision();
+
+        if (OutOfBounds()) {
+            transform.position = new Vector3(0, -2.30f, 0);
+        }
+
+        if (Finished()) {
+            OnGameFinished?.Invoke(this, EventArgs.Empty);
+        }
+
     }
 
     private void FixedUpdate() {
@@ -150,9 +163,34 @@ public class Player : MonoBehaviour
 
         if (coinCollider != null) {
             Destroy(coinCollider.gameObject);
-            Debug.Log("Destroy");
             OnCoinCollected?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private bool OutOfBounds() {
+        float extraHeight = 0.1f;
+        RaycastHit2D raycastHit = Physics2D.CapsuleCast(playerCapsuleCollider.bounds.center,
+            playerCapsuleCollider.bounds.size,
+            playerCapsuleCollider.direction, 0f, Vector2.down,
+            extraHeight, borderLayerMask);
+
+        if (raycastHit.collider != null) {
+            return true;
+        }
+        return false;
+    }
+
+    private bool Finished() {
+        float extraHeight = 0.1f;
+        RaycastHit2D raycastHit = Physics2D.CapsuleCast(playerCapsuleCollider.bounds.center,
+            playerCapsuleCollider.bounds.size,
+            playerCapsuleCollider.direction, 0f, Vector2.down,
+            extraHeight, finishLayerMask);
+
+        if (raycastHit.collider != null) {
+            return true;
+        }
+        return false;
     }
 }
 

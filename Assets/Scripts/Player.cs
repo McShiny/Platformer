@@ -1,12 +1,18 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour
 {
 
+    public static Player Instance { get; private set; }
+
+    public event EventHandler OnCoinCollected;
+
     [SerializeField] private Rigidbody2D playerBody;
     [SerializeField] private CapsuleCollider2D playerCapsuleCollider;
     [SerializeField] private LayerMask enviromentLayerMask;
+    [SerializeField] private LayerMask coinLayerMask;
 
     // Movement Variables
     private float moveSpeed = 7f;
@@ -16,6 +22,11 @@ public class Player : MonoBehaviour
     private float jumpTime = 0f;
     private float maxJumpTime = 0.2f;
     private bool playerJumpQued = false;
+    private bool doubleJump = true;
+
+    private void Awake() {
+        Instance = this;
+    }
 
     private void Start() {
         GameInput.Instance.OnJumpPreformed += GameInput_OnJumpPreformed;
@@ -24,13 +35,12 @@ public class Player : MonoBehaviour
     private void GameInput_OnJumpPreformed(object sender, System.EventArgs e) {
         if (IsGrounded()) {
             playerJumpQued = true;
-            Debug.Log("Jump Qued");
         }
     }
 
     private void Update() {
-        Debug.Log(IsGrounded());
         PlayerMove();
+        CoinCollision();
     }
 
     private void FixedUpdate() {
@@ -76,4 +86,20 @@ public class Player : MonoBehaviour
         return false;
     }
 
+    private void CoinCollision() {
+        Collider2D coinCollider = Physics2D.OverlapCapsule(
+        playerCapsuleCollider.bounds.center,
+        playerCapsuleCollider.bounds.size,
+        playerCapsuleCollider.direction,
+        0f,
+        coinLayerMask
+    );
+
+        if (coinCollider != null) {
+            Destroy(coinCollider.gameObject);
+            Debug.Log("Destroy");
+            OnCoinCollected?.Invoke(this, EventArgs.Empty);
+        }
+    }
 }
+

@@ -100,9 +100,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8147881974390713244}
-  - component: {fileID: 6563512673285928829}
   - component: {fileID: 3475129410214375257}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Coin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,22 +124,6 @@ Transform:
   - {fileID: 6228401884494265072}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6563512673285928829
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5823462555866491732}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd7b0251cb9b60e438851b07d70a3eff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Coin
-  coinCollider: {fileID: 3475129410214375257}
-  playerLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
 --- !u!58 &3475129410214375257
 CircleCollider2D:
   m_ObjectHideFlags: 0

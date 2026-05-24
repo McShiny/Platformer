@@ -8,6 +8,10 @@ public class Player : MonoBehaviour
     public static Player Instance { get; private set; }
 
     public event EventHandler OnCoinCollected;
+    public event EventHandler<OnPlayerDashedEventArgs> OnPlayerDashed;
+    public class OnPlayerDashedEventArgs : EventArgs {
+        public float progressNormalized;
+    }
 
     [SerializeField] private Rigidbody2D playerBody;
     [SerializeField] private CapsuleCollider2D playerCapsuleCollider;
@@ -16,13 +20,22 @@ public class Player : MonoBehaviour
 
     // Movement Variables
     private float moveSpeed = 7f;
+    private float lastMoveDirection;
 
     // Jump Variables
     private float jumpVelocity = 18f;
     private float jumpTime = 0f;
     private float maxJumpTime = 0.2f;
     private bool playerJumpQued = false;
-    private bool doubleJump = true;
+
+    // Dash Variables
+    private float dashVelocity = 30f;
+    private bool dashQued = false;
+    private float dashingTime = 0f;
+    private float dashingTimeMax = 0.25f;
+    private bool dashAvailable = true;
+    private float dashCooldown = 0f;
+    private float dashCooldownTime = 2.5f;
 
     private void Awake() {
         Instance = this;
@@ -30,6 +43,17 @@ public class Player : MonoBehaviour
 
     private void Start() {
         GameInput.Instance.OnJumpPreformed += GameInput_OnJumpPreformed;
+        GameInput.Instance.OnDashPreformed += GameInput_OnDashPreformed;
+    }
+
+    private void GameInput_OnDashPreformed(object sender, EventArgs e) {
+        if (dashAvailable) {
+            dashQued = true;
+            OnPlayerDashed?.Invoke(this, new OnPlayerDashedEventArgs {
+                progressNormalized = 1f
+            });
+            dashAvailable = false;
+        }
     }
 
     private void GameInput_OnJumpPreformed(object sender, System.EventArgs e) {
@@ -53,12 +77,39 @@ public class Player : MonoBehaviour
                 jumpTime = 0f;
             }
         }
+
+        if (dashQued) {
+            if (dashingTime < dashingTimeMax) {
+                PlayerDashing();
+                dashingTime += Time.deltaTime;
+            }
+            else {
+                dashQued = false;
+                dashingTime = 0f;
+            }
+        }
+
+        if (!dashAvailable) {
+            if (dashCooldown < dashCooldownTime) {
+                dashCooldown += Time.deltaTime;
+                OnPlayerDashed?.Invoke(this, new OnPlayerDashedEventArgs {
+                    progressNormalized = 1 - dashCooldown / 2.5f
+                });
+            } else {
+                dashAvailable = true;
+                dashCooldown = 0f;
+                OnPlayerDashed?.Invoke(this, new OnPlayerDashedEventArgs {
+                    progressNormalized = 1
+                });
+            }
+        }
     }
 
     private float PlayerMoveDirectionNormalized() {
         Vector2 inputVector = new Vector2(0, 0);
 
         inputVector.x = GameInput.Instance.GetMovementVectorNormalized();
+        lastMoveDirection = inputVector.x;
 
         return inputVector.x;
     }
@@ -68,9 +119,11 @@ public class Player : MonoBehaviour
     }
 
     private void PlayerJumping() {
- 
         playerBody.linearVelocity = new Vector2(playerBody.linearVelocityX, jumpVelocity);
+    }
 
+    private void PlayerDashing() {
+        playerBody.linearVelocity = new Vector2(dashVelocity * lastMoveDirection, playerBody.linearVelocityY);
     }
 
     private bool IsGrounded() {

@@ -7,6 +7,7 @@ public class GameInput : MonoBehaviour
     public static GameInput Instance { get; private set; }
 
     public event EventHandler OnJumpPreformed;
+    public event EventHandler OnDashPreformed;
 
     private PlayerInputActions playerInputActions;
 
@@ -17,6 +18,11 @@ public class GameInput : MonoBehaviour
         playerInputActions.Player.Enable();
 
         playerInputActions.Player.Jump.performed += Jump_performed;
+        playerInputActions.Player.Dash.performed += Dash_performed;
+    }
+
+    private void Dash_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
+        OnDashPreformed?.Invoke(this, EventArgs.Empty);
     }
 
     private void Jump_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj) {
